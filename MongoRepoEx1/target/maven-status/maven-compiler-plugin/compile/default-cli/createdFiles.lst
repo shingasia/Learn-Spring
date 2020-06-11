@@ -1,0 +1,4 @@
+com\mongo\main\MainClass.class
+com\mongo\repositories\UserRepository.class
+com\mongo\config\MongoConfig.class
+com\mongo\vo\User.class

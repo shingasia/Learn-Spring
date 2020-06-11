@@ -1,0 +1,4 @@
+com\initializerex\config\ControllerConfig.class
+com\initializerex\controllers\HelloController.class
+com\initializerex\config\DispatcherInitializer.class
+com\initializerex\config\WebConfig.class
