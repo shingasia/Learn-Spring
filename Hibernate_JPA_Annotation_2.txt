@@ -1,0 +1,99 @@
+▶▶▶▶▶▶▶ Hibernate, JPA 애너테이션 설명
+=========================== 링크 ===========================
+https://joont92.github.io/jpa/JPQL/     (JPQL에 대해서)
+https://joont92.github.io/jpa/%EB%8B%A4%EC%96%91%ED%95%9C-%EC%97%B0%EA%B4%80%EA%B4%80%EA%B3%84-%EB%A7%A4%ED%95%91/
+(@OneToOne, @OneToMany, @ManyToOne, @ManyToMany에 대해서)
+
+https://www.baeldung.com/jpa-many-to-many (@ManyToMany에 대해서)
+
+https://joont92.github.io/jpa/%EA%B3%A0%EA%B8%89-%EB%A7%A4%ED%95%91/ (복합키(composite primary keys)에 대해서)
+https://www.baeldung.com/jpa-composite-primary-keys (복합키에 대해서)
+https://www.baeldung.com/jpa-embedded-embeddable
+
+https://www.objectdb.com/api/java/jpa/MapsId (여러가지 애너테이션 설명)
+==========================================================================
+
+<복합키 관계>
+@IdClass 방식 VS @EmbeddedId 방식
+
+
+▶ @MapsId(value="empid")
+-@EmbeddedId 방식에서 사용함
+-(선택 사항) 관계 속성이 해당하는 복합 키 내의 속성 이름입니다. 제공되지 않은 경우 관계는 항목의 기본 키를 매핑합니다.
+
+Target: Fields (including property get methods)
+Designates a ManyToOne or OneToOne relationship attribute that provides the mapping for an EmbeddedId primary key, an attribute within an EmbeddedId primary key, or a simple primary key of the parent entity. The value element specifies the attribute within a composite key to which the relationship attribute corresponds. If the entity's primary key is of the same Java type as the primary key of the entity referenced by the relationship, the value attribute is not specified.
+Example:
+
+    // parent entity has simple primary key
+
+    @Entity
+    public class Employee {
+       @Id long empId;
+       String name;
+       ...
+    } 
+
+    // dependent entity uses EmbeddedId for composite key
+
+    @Embeddable
+    public class DependentId {
+       String name;
+       long empid;   // corresponds to primary key type of Employee
+    }
+
+    @Entity
+    public class Dependent {
+       @EmbeddedId DependentId id;
+        ...
+       @MapsId("empid")  //  maps the empid attribute of embedded id
+       @ManyToOne Employee emp;
+    }
+
+
+▶ @JoinColumns
+
+Target: Fields (including property get methods)
+Defines mapping for composite foreign keys. This annotation groups JoinColumn annotations for the same relationship.
+When the JoinColumns annotation is used, both the name and the referencedColumnName elements must be specified in each such JoinColumn annotation.
+
+Example:
+    @ManyToOne
+    @JoinColumns({
+        @JoinColumn(name="ADDR_ID", referencedColumnName="ID"),
+        @JoinColumn(name="ADDR_ZIP", referencedColumnName="ZIP")
+    })
+    public Address getAddress() { return address; }
+
+
+
+▶ @JoinTable
+
+Target: Fields (including property get methods)
+Used in the mapping of associations. It is specified on the owning side of an association.
+A join table is typically used in the mapping of many-to-many and unidirectional one-to-many associations. It may also be used to map bidirectional many-to-one/one-to-many associations, unidirectional many-to-one relationships, and one-to-one associations (both bidirectional and unidirectional).
+
+When a join table is used in mapping a relationship with an embeddable class on the owning side of the relationship, the containing entity rather than the embeddable class is considered the owner of the relationship.
+
+If the JoinTable annotation is missing, the default values of the annotation elements apply. The name of the join table is assumed to be the table names of the associated primary tables concatenated together (owning side first) using an underscore.
+
+Example:
+
+    @JoinTable(
+        name="CUST_PHONE",
+        joinColumns=
+            @JoinColumn(name="CUST_ID", referencedColumnName="ID"),
+        inverseJoinColumns=
+            @JoinColumn(name="PHONE_ID", referencedColumnName="ID")
+    )
+
+
+
+
+
+
+
+
+
+
+
