@@ -1,0 +1,118 @@
+https://postitforhooney.tistory.com/entry/SpringSecurity-%EC%B4%88%EB%B3%B4%EC%9E%90%EA%B0%80-%EC%9D%B4%ED%95%B4%ED%95%98%EB%8A%94-Spring-Security-%ED%8D%BC%EC%98%B4
+https://coding-start.tistory.com/153
+https://sjh836.tistory.com/165
+▶ 용어
+
+접근 주체(Principal) : 보호된 리소스에 접근하는 대상
+인증(Authentication) : 보호된 리소스에 접근한 대상에 대해 이 유저가 누구인지, 애플리케이션의 작업을 수행해도 되는 주체인지 확인하는 과정(ex. Form 기반 Login)
+인가(Authorize) : 해당 리소스에 대해 접근 가능한 권한을 가지고 있는지 확인하는 과정(After Authentication, 인증 이후)
+권한 : 어떠한 리소스에 대한 접근 제한, 모든 리소스는 접근 제어 권한이 걸려있다. 즉, 인가 과정에서 해당 리소스에 대한 제한된 최소한의 권한을 가졌는지 확인한다.
+
+▶ DelegatingFilterProxy
+DelegatingFilterProxy는 스프링 시큐리티가 모든 애플리케이션 요청을 감싸게 해서 모든 요청에 보안이 적용되게 하는 서블릿필터이다.(스프링 프레임워크에서 제공) 
+스프링 프레임워크 기반의 웹 애플리케이션에서 서블릿 필터 라이프 사이클과 연계해 스프링 빈 의존성을 서블릿 필터에 바인딩하는데 사용합니다.
+web.xml에 다음과 같은 설정을 해주면 애플리케이션의 모든 요청을 스프링 시큐리티가 감싸서 처리할 수 있게 됩니다.
+
+<context-param>
+  <param-name>contextConfigLocation</param-name>
+  <param-value> 
+    classpath:applicationContext.xml
+    classpath:applicationContext-security.xml
+  </param-value>
+</context-param>
+
+<filter>
+  <filter-name>springSecurityFilterChain</filter-name>
+  <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+</filter>
+<filter-mapping>
+  <filter-name>springSecurityFilterChain</filter-name>
+  <url-pattern>/*</url-pattern>
+</filter-mapping>
+
+=====================================================================================
+원래 XML 기반의 설정에서는 web.xml에 org.springframework.web.filter.DelegatingFilterProxy라는 
+springSecurityFilterChain을 등록하는 것으로 시작합니다만, 
+자바 기반의 설정에서는 WebSecurityConfigurerAdapter를 상속받은 클래스에 @EnableWebSecurity 어노테이션을 명시하는 것만으로도 
+springSecurityFilterChain가 자동으로 포함되어집니다.
+
+@Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter { 
+}
+
+AbstractSecurityWebApplicationInitializer를 상속한 빈(empty) 클래스를 만들면, 
+스프링은 DelegatingFilterProxy를 기본적으로 활성화해 springSecurityFilterChain이 등록된 어떤 다른 javax.servlet.Filter보다도 먼저 사용되게 합니다.
+
+public class SecurityWebApplicationInitializer 
+                    extends AbstractSecurityWebApplicationInitializer { 
+
+}
+
+그 다음에는 보통 스프링 MVC를 이용해서 애플리케이션을 구성하기 때문에 ApplicationIniticalizer에 
+WebSecurityConfigurerAdapter를 상속받은 클래스를 
+getRootConfigClasses() 메소드에 추가하는 것으로 스프링 시큐리티에 대한 기본적인 적용은 끝입니다.
+
+public class ApplicationInitializer 
+                    extends AbstractAnnotationConfigDispatcherServletInitializer { 
+     @Override 
+     protected Class<?>[] getRootConfigClasses() { 
+          return new Class[] { WebSecurityConfig.class }; 
+     } 
+     
+     // ... other overrides ... 
+}
+
+
+=====================================================================================
+
+▶ SpringSecurityFilterChain 종류
+
+1) SecurityContextPersistenceFilter
+SecurityContextRepository에서 SecurityContext를 로드하고 저장하는 일을 담당
+
+2) LogoutFilter
+로그아웃 URL로 지정된 가상URL에 대한 요청을 감시하고 매칭되는 요청이 있으면 사용자를 로그아웃시킴
+
+3) UsernamePasswordAuthenticationFilter
+사용자명과 비밀번호로 이루어잊 폼기반 인증에 사용하는 가상 URL요청을 감시하고 요청이 있으면 사용자의 인증을 진행함
+AuthenticationManager를 통한 인증 실행
+인증 성공 시, 얻은 Authentication 객체를 SecurityContext에 저장 후 AuthenticationSuccessHandler 실행
+인증 실패 시, AuthenticationFailureHandler 실행
+
+4) DefaultLoginPageGeneratingFilter
+폼기반 또는 OpenID 기반 인증에 사용하는 가상 URL에 대한 요청을 감시하고 로그인 폼 기능을 수행하는데 필요한 HTML을 생성함
+
+5) BasicAuthenticationFilter
+HTTP 기본 인증 헤더를 감시하고 이를 처리함
+
+6) RequestCacheAwareFilter
+로그인 성공 이후 인증 요청에 의해 가로채어진 사용자의 원래 요청을 재구성하는데 사용됨
+
+7) SecurityContextHolderAwareRequestFilter
+HttpServletRequest를 HttpServletRequestWrapper를 상속하는 하위 클래스(SecurityContextHolderAwareRequestWrapper)로 감싸서 필터 체인상의 다음 필터들에게 요청 프로세서에 추가 컨텍스트를 제공함
+
+8) AnonymousAuthenticationFilter
+이 필터가 호출되는 시점까지 사용자 정보가 인증되지 않았다면 인증토큰에 사용자가 익명 사용자로 나타난다.
+
+9) SessionManagementFilter
+이 필터는 인증된 사용자와 관련된 모든 세션을 추적한다.
+
+10) ExceptionTranslationFilter
+이 필터는 보호된 요청을 처리하는 중에 발생할 수 있는 예외를 위임하거나 전달하는 역할을 한다.
+
+11) FilterSecurityInterceptor
+이 필터는 권한부여와 관련한 결정을 AccesssDecisionManager에게 위임해 권한부여 결정 및 접근 제어 결정을 쉽게 만들어 줌.
+
+>> 필터 체인의 제일 마지막에 위치한 FilterSecurityInterceptor는 앞에 지나온 모든 필터들의 정보를 토대로 최종 결정을 내립니다.
+
+
+
+
+
+
+
+
+
+

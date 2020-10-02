@@ -11,6 +11,7 @@ https://www.baeldung.com/jpa-composite-primary-keys (복합키에 대해서)
 https://www.baeldung.com/jpa-embedded-embeddable
 
 https://www.objectdb.com/api/java/jpa/MapsId (여러가지 애너테이션 설명)
+https://docs.jboss.org/hibernate/orm/5.3/userguide/html_single/Hibernate_User_Guide.html#annotations-jpa-mapsid (여러가지 애너테이션 설명)
 ==========================================================================
 
 <복합키 관계>
@@ -22,14 +23,18 @@ https://www.objectdb.com/api/java/jpa/MapsId (여러가지 애너테이션 설�
 -(선택 사항) 관계 속성이 해당하는 복합 키 내의 속성 이름입니다. 제공되지 않은 경우 관계는 항목의 기본 키를 매핑합니다.
 
 Target: Fields (including property get methods)
-Designates a ManyToOne or OneToOne relationship attribute that provides the mapping for an EmbeddedId primary key, an attribute within an EmbeddedId primary key, or a simple primary key of the parent entity. The value element specifies the attribute within a composite key to which the relationship attribute corresponds. If the entity's primary key is of the same Java type as the primary key of the entity referenced by the relationship, the value attribute is not specified.
+Designates a ManyToOne or OneToOne relationship attribute that provides the mapping for an EmbeddedId primary key, an attribute within an EmbeddedId primary key, or a simple primary key of the parent entity. 
+The value element specifies the attribute within a composite key to which the relationship attribute corresponds. 
+If the entity's primary key is of the same Java type as the primary key of the entity referenced by the relationship, the value attribute is not specified.
+
 Example:
 
     // parent entity has simple primary key
 
     @Entity
     public class Employee {
-       @Id long empId;
+       @Id 
+       long empId;
        String name;
        ...
     } 
@@ -44,11 +49,175 @@ Example:
 
     @Entity
     public class Dependent {
-       @EmbeddedId DependentId id;
+       @EmbeddedId 
+       DependentId id;
         ...
        @MapsId("empid")  //  maps the empid attribute of embedded id
-       @ManyToOne Employee emp;
+       @ManyToOne 
+       Employee emp;
     }
+
+
+▶ @Embeddable
+
+Target: Classes
+Defines a class whose instances are stored as an intrinsic(고유한, 본질적인) part of an owning entity 
+and share the identity of the entity. 
+Each of the persistent properties or fields of the embedded object is mapped to the database table for the entity.
+
+Note that the Transient annotation may be used to designate the non-persistent state of an embeddable class.
+
+
+Example 1:
+
+    @Embeddable public class EmploymentPeriod { 
+       @Temporal(DATE) java.util.Date startDate;
+       @Temporal(DATE) java.util.Date endDate;
+      ... 
+    }
+
+Example 2:
+
+    @Embeddable public class PhoneNumber {
+        protected String areaCode;
+        protected String localNumber;
+
+        @ManyToOne 
+        PhoneServiceProvider provider;
+        ...
+    }
+
+    @Entity public class PhoneServiceProvider {
+        @Id 
+        protected String name;
+         ...
+    }
+
+Example 3:
+
+    @Embeddable public class Address {
+       protected String street;
+       protected String city;
+       protected String state;
+
+       @Embedded 
+       protected Zipcode zipcode;
+    }
+
+    @Embeddable public class Zipcode {
+       protected String zip;
+       protected String plusFour;
+     }
+
+Example 4:
+
+@Entity(name = "SystemUser")
+public static class SystemUser {
+
+        @EmbeddedId
+        private PK pk;
+
+        private String name;
+
+        //Getters and setters are omitted for brevity
+}
+
+@Embeddable
+public static class PK implements Serializable {
+
+        private String subsystem;
+
+        private String username;
+
+        public PK(String subsystem, String username) {
+                this.subsystem = subsystem;
+                this.username = username;
+        }
+
+        private PK() {
+        }
+
+        @Override
+        public boolean equals(Object o) {
+                if ( this == o ) {
+                        return true;
+                }
+                if ( o == null || getClass() != o.getClass() ) {
+                        return false;
+                }
+                PK pk = (PK) o;
+                return Objects.equals( subsystem, pk.subsystem ) &&
+                                Objects.equals( username, pk.username );
+        }
+
+        @Override
+        public int hashCode() {
+                return Objects.hash( subsystem, username );
+        }
+}
+
+
+Example 5:
+
+@Entity(name = "SystemUser")
+public static class SystemUser {
+
+        @EmbeddedId
+        private PK pk;
+
+        private String name;
+
+        //Getters and setters are omitted for brevity
+}
+
+@Entity(name = "Subsystem")
+public static class Subsystem {
+
+        @Id
+        private String id;
+
+        private String description;
+
+        //Getters and setters are omitted for brevity
+}
+
+@Embeddable
+public static class PK implements Serializable {
+
+        @ManyToOne(fetch = FetchType.LAZY)
+        private Subsystem subsystem;
+
+        private String username;
+
+        public PK(Subsystem subsystem, String username) {
+                this.subsystem = subsystem;
+                this.username = username;
+        }
+
+        private PK() {
+        }
+
+        @Override
+        public boolean equals(Object o) {
+                if ( this == o ) {
+                        return true;
+                }
+                if ( o == null || getClass() != o.getClass() ) {
+                        return false;
+                }
+                PK pk = (PK) o;
+                return Objects.equals( subsystem, pk.subsystem ) &&
+                                Objects.equals( username, pk.username );
+        }
+
+        @Override
+        public int hashCode() {
+                return Objects.hash( subsystem, username );
+        }
+}
+
+
+
 
 
 ▶ @JoinColumns
@@ -67,11 +236,13 @@ Example:
 
 
 
+
 ▶ @JoinTable
 
 Target: Fields (including property get methods)
 Used in the mapping of associations. It is specified on the owning side of an association.
-A join table is typically used in the mapping of many-to-many and unidirectional one-to-many associations. It may also be used to map bidirectional many-to-one/one-to-many associations, unidirectional many-to-one relationships, and one-to-one associations (both bidirectional and unidirectional).
+A join table is typically used in the mapping of many-to-many and unidirectional one-to-many associations. 
+It may also be used to map bidirectional(양방향의) many-to-one/one-to-many associations, unidirectional(단방향의) many-to-one relationships, and one-to-one associations (both bidirectional and unidirectional).
 
 When a join table is used in mapping a relationship with an embeddable class on the owning side of the relationship, the containing entity rather than the embeddable class is considered the owner of the relationship.
 
@@ -86,6 +257,262 @@ Example:
         inverseJoinColumns=
             @JoinColumn(name="PHONE_ID", referencedColumnName="ID")
     )
+
+
+
+<Relationships>==============================================================================================================================================================================================================================================
+
+▶ @OneToOne
+
+Target: Fields (including property get methods)
+Defines a single-valued association to another entity that has one-to-one multiplicity(다수, 다양성).
+It is not normally necessary to specify the associated target entity explicitly since it can usually be inferred from the type of the object being referenced.
+If the relationship is bidirectional, the non-owning side must use the mappedBy element of the OneToOne annotation to specify the relationship field or property of the owning side.
+
+The OneToOne annotation may be used within an embeddable class to specify a relationship from the embeddable class to an entity class.
+If the relationship is bidirectional and the entity containing the embeddable class is on the owning side of the relationship, the non-owning side must use the mappedBy element of the OneToOne annotation to specify the relationship field or property of the embeddable class.
+The dot (".") notation syntax must be used in the mappedBy element to indicate the relationship attribute within the embedded attribute.
+The value of each identifier used with the dot notation is the name of the respective embedded field or property.
+
+
+
+Example 1: One-to-one association that maps a foreign key column
+
+    // On Customer class:
+
+    @OneToOne(optional=false)
+    @JoinColumn(
+     name="CUSTREC_ID", unique=true, nullable=false, updatable=false)
+    public CustomerRecord getCustomerRecord() { return customerRecord; }
+
+    // On CustomerRecord class:
+
+    @OneToOne(optional=false, mappedBy="customerRecord")
+    public Customer getCustomer() { return customer; }
+
+
+Example 2: One-to-one association that assumes both the source and target share the same primary key values.
+
+    // On Employee class:
+
+    @Entity
+    public class Employee {
+     @Id 
+     Integer id;
+    
+     @OneToOne 
+     @MapsId
+     EmployeeInfo info;
+     ...
+    }
+
+    // On EmployeeInfo class:
+
+    @Entity
+    public class EmployeeInfo {
+     @Id 
+     Integer id;
+     ...
+    }
+
+
+Example 3: One-to-one association from an embeddable class to another entity.
+
+    @Entity
+    public class Employee {
+       @Id int id;
+       @Embedded LocationDetails location;
+       ...
+    }
+
+    @Embeddable
+    public class LocationDetails {
+       int officeNumber;
+       @OneToOne ParkingSpot parkingSpot;
+       ...
+    }
+
+    @Entity
+    public class ParkingSpot {
+       @Id int id;
+       String garage;
+       @OneToOne(mappedBy="location.parkingSpot") Employee assignedTo;
+        ... 
+    }
+
+
+
+
+▶ @OneToMany
+
+Target: Fields (including property get methods)
+Defines a many-valued association with one-to-many multiplicity.
+If the collection is defined using generics to specify the element type, the associated target entity type need not be specified;
+otherwise the target entity class must be specified.
+If the relationship is bidirectional, the  mappedBy element must be used to specify the relationship field or property of the entity that is the owner of the relationship.
+
+The OneToMany annotation may be used within an embeddable class contained within an entity class to specify a relationship to a collection of entities.
+If the relationship is bidirectional, the  mappedBy element must be used to specify the relationship field or property of the entity that is the owner of the relationship.
+When the collection is a java.util.Map, the cascade element and the orphanRemoval element apply to the map value.
+
+
+
+Example 1: One-to-Many association using generics
+
+    // In Customer class:
+
+    @OneToMany(cascade=ALL, mappedBy="customer")
+    public Set getOrders() { return orders; }
+
+    
+
+    In Order class:
+
+    @ManyToOne
+    @JoinColumn(name="CUST_ID", nullable=false)
+    public Customer getCustomer() { return customer; }
+    
+
+Example 2: One-to-Many association without using generics
+
+    // In Customer class:
+
+    @OneToMany(targetEntity=com.acme.Order.class, cascade=ALL,
+                mappedBy="customer")
+    public Set getOrders() { return orders; }
+
+
+    // In Order class:
+
+    @ManyToOne
+    @JoinColumn(name="CUST_ID", nullable=false)
+    public Customer getCustomer() { return customer; }
+
+
+Example 3: Unidirectional One-to-Many association using a foreign key mapping
+
+    // In Customer class:
+
+    @OneToMany(orphanRemoval=true)
+    @JoinColumn(name="CUST_ID") // join column is in table for Order
+    public Set getOrders() {return orders;}
+
+
+
+
+▶ @ManyToOne
+
+Target: Fields (including property get methods)
+Defines a single-valued association to another entity class that has many-to-one multiplicity.
+It is not normally necessary to specify the target entity explicitly since it can usually be inferred from the type of the object being referenced.
+If the relationship is bidirectional, the non-owning OneToMany entity side must used the mappedBy element to specify the relationship field or property of the entity that is the owner of the relationship.
+
+The ManyToOne annotation may be used within an embeddable class to specify a relationship from the embeddable class to an entity class.
+If the relationship is bidirectional, the non-owning OneToMany entity side must use the mappedBy element of the OneToMany annotation to specify the relationship field or property of the embeddable field or property on the owning side of the relationship.
+The dot (".") notation syntax must be used in the mappedBy element to indicate the relationship attribute within the embedded attribute.
+The value of each identifier used with the dot notation is the name of the respective embedded field or property.
+
+
+
+Example 1:
+
+     @ManyToOne(optional=false) 
+     @JoinColumn(name="CUST_ID", nullable=false, updatable=false)
+     public Customer getCustomer() { return customer; }
+
+
+Example 2:
+ 
+     @Entity
+     public class Employee {
+        @Id 
+        int id;
+        @Embedded 
+        JobInfo jobInfo;
+        ...
+     }
+
+     @Embeddable
+     public class JobInfo {
+        String jobDescription; 
+        @ManyToOne 
+        ProgramManager pm; // Bidirectional
+     }
+
+     @Entity
+     public class ProgramManager {
+        @Id 
+        int id;
+        @OneToMany(mappedBy="jobInfo.pm")
+        Collection manages;
+     }
+
+
+
+▶ @ManyToMany
+
+Target: Fields (including property get methods)
+Defines a many-valued association with many-to-many multiplicity.
+Every many-to-many association has two sides, the owning side and the non-owning, or inverse, side.
+The join table is specified on the owning side.
+If the association is bidirectional, either side may be designated as the owning side.
+If the relationship is bidirectional, the non-owning side must use the mappedBy element of the ManyToMany annotation to specify the relationship field or property of the owning side.
+
+The ManyToMany annotation may be used within an embeddable class contained within an entity class to specify a relationship to a collection of entities.
+If the relationship is bidirectional and the entity containing the embeddable class is the owner of the relationship, the non-owning side must use the mappedBy element of the ManyToMany annotation to specify the relationship field or property of the embeddable class.
+The dot (".") notation syntax must be used in the mappedBy element to indicate the relationship attribute within the embedded attribute.
+The value of each identifier used with the dot notation is the name of the respective embedded field or property.
+
+
+
+Example 1:
+
+    // In Customer class:
+
+    @ManyToMany
+    @JoinTable(name="CUST_PHONES")
+    public Set getPhones() { return phones; }
+
+    // In PhoneNumber class:
+
+    @ManyToMany(mappedBy="phones")
+    public Set getCustomers() { return customers; }
+     
+    
+
+Example 2:
+
+    // In Customer class:
+
+    @ManyToMany(targetEntity=com.acme.PhoneNumber.class)
+    public Set getPhones() { return phones; }
+
+    // In PhoneNumber class:
+
+    @ManyToMany(targetEntity=com.acme.Customer.class, mappedBy="phones")
+    public Set getCustomers() { return customers; }
+
+
+Example 3:
+
+    // In Customer class:
+
+    @ManyToMany
+    @JoinTable(name="CUST_PHONE",
+        joinColumns=
+            @JoinColumn(name="CUST_ID", referencedColumnName="ID"),
+        inverseJoinColumns=
+            @JoinColumn(name="PHONE_ID", referencedColumnName="ID")
+        )
+    public Set getPhones() { return phones; }
+
+    // In PhoneNumberClass:
+
+    @ManyToMany(mappedBy="phones")
+    public Set getCustomers() { return customers; }
+
+
+
 
 
 
