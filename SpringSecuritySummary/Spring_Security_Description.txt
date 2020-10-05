@@ -16,8 +16,8 @@ web.xml에 다음과 같은 설정을 해주면 애플리케이션의 모든 요
 <context-param>
   <param-name>contextConfigLocation</param-name>
   <param-value> 
-    classpath:applicationContext.xml
-    classpath:applicationContext-security.xml
+    classpath:root-context.xml
+    classpath:security-context.xml
   </param-value>
 </context-param>
 
@@ -38,7 +38,7 @@ springSecurityFilterChain가 자동으로 포함되어집니다.
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true) // securedEnabled = true?
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter { 
 }
 
