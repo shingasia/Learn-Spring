@@ -15,11 +15,21 @@ https://docs.jboss.org/hibernate/orm/5.3/userguide/html_single/Hibernate_User_Gu
 ==========================================================================
 
 <복합키 관계>
+▶ 복합키(복합 식별자)는 하나 이상의 영구 속성(attributes)과 통신한다. JPA 설명서에 있는 복합키를 관리하는 몇가지 규칙이 있다.
+- 복합키는 "primary key class"에 의해 나타내야 한다
+(primary key class를 정의하는 방법은 javax.persistence.EmbeddedId 애너테이션 또는 javax.persistence.IdClass 애너테이션으로 나타낼 수 있다.)
+- primary key class는 public이어야 하고, public 기본생성자(no-arg constructor)를 가져야 한다.
+- primary key class는 Serializable인터페이스를 구현해야 한다
+- primary key class는 equals(), hashCode() 메서드를 정의해야 한다
+
 @IdClass 방식 VS @EmbeddedId 방식
+
+
 
 
 ▶ @MapsId(value="empid")
 -@EmbeddedId 방식에서 사용함
+-일대일(One-To-One) 또는 다대일(Many-To-One) 관계에서 primary key로 사용되는 애트리뷰트를 명시할 때 사용된다
 -(선택 사항) 관계 속성이 해당하는 복합 키 내의 속성 이름입니다. 제공되지 않은 경우 관계는 항목의 기본 키를 매핑합니다.
 
 Target: Fields (including property get methods)
@@ -56,6 +66,35 @@ Example:
        @ManyToOne 
        Employee emp;
     }
+
+
+
+
+
+
+▶ @Embedded
+
+Target: Fields (including property get methods)
+Specifies a persistent field or property of an entity whose value is an instance of an embeddable class. 
+The embeddable class must be annotated as Embeddable.
+The AttributeOverride, AttributeOverrides, AssociationOverride, and AssociationOverrides annotations 
+may be used to override mappings declared or defaulted by the embeddable class.
+
+Example:
+
+   @Embedded
+   @AttributeOverrides({
+       @AttributeOverride(name="startDate", column=@Column("EMP_START")),
+       @AttributeOverride(name="endDate", column=@Column("EMP_END"))
+   })
+   public EmploymentPeriod getEmploymentPeriod() { ... }
+
+
+
+
+
+
+
 
 
 ▶ @Embeddable
