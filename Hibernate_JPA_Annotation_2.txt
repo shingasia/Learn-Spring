@@ -93,6 +93,81 @@ Example:
 
 
 
+▶ @AttributeOverride
+Target: Classes and fields (including property get methods)
+Used to override the mapping of a Basic (whether explicit or default) property or field or Id property or field.
+May be applied to an entity that extends a mapped superclass or to an embedded field or property 
+to override a basic mapping or id mapping defined by the mapped superclass or embeddable class (or embeddable class of one of its attributes).
+
+May be applied to an element collection containing instances of an embeddable class or to a map collection whose key and/or value is an embeddable class. 
+When AttributeOverride is applied to a map, "key." or "value." must be used to prefix the name of the attribute that is being overridden by order to specify it as part of the map key or map value.
+
+To override mappings at multiple levels of embedding, a dot (".") notation form must be used in the name element to indicate an attribute within an embedded attribute. 
+The value of each identifier used with the dot notation is the name of the respective embedded field or property.
+
+If AttributeOverride is not specified, the column is mapped the same as in the original mapping.
+
+
+
+
+
+Example 1:
+
+    @Embeddable public class Address {
+        protected String street;
+        protected String city;
+        protected String state;
+        @Embedded protected Zipcode zipcode;
+    }
+
+    @Embeddable public class Zipcode {
+        protected String zip;
+        protected String plusFour;
+    }
+
+    @Entity public class Customer {
+        @Id protected Integer id;
+        protected String name;
+        @AttributeOverrides({
+            @AttributeOverride(name="state",
+                               column=@Column(name="ADDR_STATE")),
+            @AttributeOverride(name="zipcode.zip",
+                               column=@Column(name="ADDR_ZIP"))
+        })
+        @Embedded protected Address address;
+        ...
+    }
+
+
+
+Example 2:
+
+    @Entity public class PropertyRecord {
+        @EmbeddedId 
+        PropertyOwner owner;
+        
+        @AttributeOverrides({
+            @AttributeOverride(name="key.street", 
+                               column=@Column(name="STREET_NAME")),
+            @AttributeOverride(name="value.size", 
+                               column=@Column(name="SQUARE_FEET")),
+            @AttributeOverride(name="value.tax", 
+                               column=@Column(name="ASSESSMENT"))
+        })
+       @ElementCollection
+       Map parcels;
+    }
+
+   @Embeddable public class PropertyInfo {
+       Integer parcelNumber;
+       Integer size;
+       BigDecimal tax;
+   }
+
+
+
+
+
 
 
 
