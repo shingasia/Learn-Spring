@@ -1,0 +1,155 @@
+<객체와 DB 테이블의 연관관계/방향(Direction)/다중성(Multiplicity)/주인(Owner)>
+
+1) 객체간의 연관관계
+회원 -> 팀         연관관계 1개 (단방향)
+팀 -> 회원         연관관계 1개 (단방향)
+
+
+2) 테이블간의 연관관계
+회원 <-> 팀        연관관계 1개 (양방향)
+
+▶ 객체의 양방향 관계는 사실 양방향 관계가 아니라 서로 다른 단방향 관계 2개 이다.
+
+class A {
+   B  b;     A -> B   // a.getB()
+}
+
+class B {
+   A  a;     B -> A   // b.getA()
+}
+
+
+SELECT * FROM MEMBER M JOIN TEAM T ON M.TEAM_ID = T.TEAM_ID
+SELECT * FROM TEAM T JOIN MEMBER M ON T.TEAM_ID = M.TEAM_ID
+
+▶ 테이블은 양방향 관계 1개
+
+
+JPA 관계는 단방향 또는 양방향 일 수 있다. 이는 단순히 연결된 엔터티 중 하나 또는 둘 다에 대한 속성으로 모델링 할 수 있음을 의미한다.
+엔티티 간의 관계 방향을 정의하는 것은 데이터베이스 매핑에 영향을주지 않는다. 도메인 모델에서 해당 관계를 사용하는 방향 만 정의한다.
+양방향 관계의 경우 일반적으로 다음 2개를 정의해야 한다
+- the owning side			(연관관계의 주인? 소유자?)
+- inverse or the referencing side	(non-owning side, 주인이 아닌 놈)
+
+
+@JoinColumn 어노테이션은 엔티티 관계를 연결할 칼럼을 지정하는 데 도움을 준다. 
+반면에 mappedBy 속성은 연관관계의 비소유측(non-owning side)를 정의한다.
+일대다(One-to-Many)/다대일(Many-to-One) 관계에서는 연관관계의 주인을 일반적으로 '다'측에서 정의된다(외래키를 가지고 있는 쪽)
+-> 외래키를 가지고 있는 쪽을 owning side로 지정하자
+
+mappedBy 속성
+-> 일단 관계의 소유측을 정의하면 하이버네이트는 이미 데이터베이스에서 해당 관계를 매핑하는데 필요한 모든 정보를 가지고 있습니다.
+이 관계를 양방향 관계로 만들기 위해서는 mappedBy 속성으로 비소유측을 지정해야 한다.
+
+<양방향 매핑 규칙>
+- 연관관계의 주인은 외래키를 관리(등록, 수정, 삭제)등의 기능을 수행할 수 있다. 반면 주인이 아닌 쪽은 읽기만 가능
+- 주인은 mappedBy 속성 사용 X
+- 주인이 아니면 mappedBy 속성으로 주인을 지정
+
+
+// 일대일 단방향
+@Entity
+public class Member {    
+    @Id
+    private Long id;
+
+    private String name;
+
+    @OneToOne
+    @JoinColumn(name = "LOCKER_ID")
+    private Locker locker;
+}
+
+@Entity
+public class Locker {
+    @Id
+    private Long id;
+    private String naame;
+}
+
+
+
+
+// 일대일 양방향
+@Entity
+public class Member {
+    @Id
+    private Long id;
+    private String username;
+
+    @OneToOne
+    @JoinColumn(name = "LOCKER_ID")
+    private Locker locker;
+}
+
+@Entity
+public class Locker {
+    @Id
+    private Long id;
+    private String naame;
+
+    @OneToOne(mappedBy = "locker")
+    private Member member;
+}
+
+다대다(N:M)
+RDBMS는 다대다 관계를 표현할 수 없다. 그러므로 중간에 연결 테이블이 있어야 한다.
+회원과 상품은 바로 N:M관계를 맺을 수 없으니 중간에 주문 같은 테이블을 넣어줘야 한다.
+
+반면에 테이블과 다르게 객체는 다대다 관계를 표현할 수 있다.
+컬렉션을 사용해서 서로 참조하고 있기만 하면 된다.
+
+
+// 다대다 양방향
+@Entity
+class Student {
+
+    @Id
+    Long id;
+
+    @ManyToMany
+    @JoinTable(
+       name = "course_like", 
+       joinColumns = @JoinColumn(name = "student_id"), 
+       inverseJoinColumns = @JoinColumn(name = "course_id"))
+    Set<Course> likedCourses;
+
+    // additional properties
+    // standard constructors, getters, and setters
+}
+
+@Entity
+class Course {
+
+    @Id
+    Long id;
+
+    @ManyToMany(mappedBy = "likedCourses")
+    Set<Student> likes;
+
+    // additional properties
+    // standard constructors, getters, and setters
+}
+
+
+
+
+▶ 조인 컬럼 -> 일반적인 외래키 컬럼을 사용하여 연관관계를 관리
+▶ 조인 테이블 -> 별도의 테이블을 사용하여 연관관계를 관리
+조인 테이블의 경우 테이블을 하나 추가해야 된다는 단점이 있다. 그러므로 기본적으로 조인 컬럼을 사용하고, 필요할 때만 조인 테이블을 사용하도록 한다.
+모든 다중성(1:1/N:1/1:N/M:N)에 대해서 @JoinTable을 사용하려면 DB에 연결 테이블을 생성해야 하고, @JoinTable로 지정해야 하므로 번거롭다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

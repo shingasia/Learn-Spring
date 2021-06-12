@@ -354,13 +354,10 @@ Example:
 ▶ @JoinTable
 
 Target: Fields (including property get methods)
-Used in the mapping of associations. It is specified on the owning side of an association.
-A join table is typically used in the mapping of many-to-many and unidirectional one-to-many associations. 
-It may also be used to map bidirectional(양방향의) many-to-one/one-to-many associations, unidirectional(단방향의) many-to-one relationships, and one-to-one associations (both bidirectional and unidirectional).
-
+연관관계를 매핑하는데 사용되고, @JoinTable 애너테이션은 연관관계의 소유측(owning side)에 명시된다.
+조인 테이블은 다중성(one-to-one/many-to-one/one-to-many/many-to-many), 방향(단방향/양방향) 상관없이 모든 연관관계를 매핑하는데 사용될 수 있다.
 When a join table is used in mapping a relationship with an embeddable class on the owning side of the relationship, the containing entity rather than the embeddable class is considered the owner of the relationship.
-
-If the JoinTable annotation is missing, the default values of the annotation elements apply. The name of the join table is assumed to be the table names of the associated primary tables concatenated together (owning side first) using an underscore.
+만약 @JoinTable 애너테이션을 생략하면, 기본값들이 적용된다. name은 밑줄을 사용하여 함께 연결된 (소유측 먼저) 연관된 기본 테이블의 테이블 이름으로 간주됩니다.
 
 Example:
 
